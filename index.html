@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline Hash Generator</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --danger: #b91c1c;
+      --ok: #047857;
+      --code-bg: #f3f4f6;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    main {
+      max-width: 980px;
+      margin: 40px auto;
+      padding: 0 20px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 1.9rem;
+    }
+
+    .subtitle {
+      margin: 0 0 24px;
+      color: var(--muted);
+    }
+
+    .privacy-box {
+      border-left: 4px solid var(--ok);
+      background: #ecfdf5;
+      padding: 12px 14px;
+      border-radius: 10px;
+      margin-bottom: 22px;
+      color: #064e3b;
+    }
+
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 42px 24px;
+      text-align: center;
+      background: #fafafa;
+      cursor: pointer;
+      transition: 0.18s ease;
+    }
+
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    .dropzone strong {
+      display: block;
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+
+    .dropzone span {
+      color: var(--muted);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    .option {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      padding: 9px 12px;
+      border-radius: 999px;
+      user-select: none;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 650;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+
+    button.secondary {
+      background: #e5e7eb;
+      color: var(--text);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .status {
+      min-height: 24px;
+      margin: 8px 0 18px;
+      color: var(--muted);
+    }
+
+    .status.error {
+      color: var(--danger);
+    }
+
+    .file-info {
+      display: none;
+      margin: 18px 0;
+      padding: 14px;
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .file-info dl {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 6px 14px;
+      margin: 0;
+    }
+
+    .file-info dt {
+      color: var(--muted);
+    }
+
+    .file-info dd {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      display: none;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 12px 8px;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #f9fafb;
+    }
+
+    code {
+      display: block;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      background: var(--code-bg);
+      border-radius: 8px;
+      padding: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.88rem;
+    }
+
+    .copy-btn {
+      margin-top: 8px;
+      padding: 7px 10px;
+      font-size: 0.85rem;
+    }
+
+    .small-note {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="card">
+      <h1>Offline Hash Generator</h1>
+      <p class="subtitle">Trascina un file o selezionalo dal tuo computer per calcolare hash SHA direttamente nel browser.</p>
+
+      <div class="privacy-box">
+        Il file viene letto esclusivamente dal browser. Questa pagina non carica il file su server esterni e non effettua chiamate di rete.
+      </div>
+
+      <div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seleziona o trascina un file">
+        <strong>Trascina qui il file</strong>
+        <span>oppure clicca per selezionarlo</span>
+        <input id="fileInput" type="file" />
+      </div>
+
+      <div class="options" aria-label="Algoritmi disponibili">
+        <label class="option"><input type="checkbox" value="SHA-1" /> SHA-1</label>
+        <label class="option"><input type="checkbox" value="SHA-256" checked /> SHA-256</label>
+        <label class="option"><input type="checkbox" value="SHA-384" /> SHA-384</label>
+        <label class="option"><input type="checkbox" value="SHA-512" checked /> SHA-512</label>
+      </div>
+
+      <div class="actions">
+        <button id="calculateBtn" disabled>Calcola hash</button>
+        <button id="copyAllBtn" class="secondary" disabled>Copia tutti</button>
+        <button id="resetBtn" class="secondary">Pulisci</button>
+      </div>
+
+      <div id="status" class="status">Nessun file selezionato.</div>
+
+      <div id="fileInfo" class="file-info">
+        <dl>
+          <dt>Nome file</dt><dd id="fileName"></dd>
+          <dt>Dimensione</dt><dd id="fileSize"></dd>
+          <dt>Tipo MIME</dt><dd id="fileType"></dd>
+          <dt>Ultima modifica</dt><dd id="fileModified"></dd>
+        </dl>
+      </div>
+
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th style="width: 120px;">Algoritmo</th>
+            <th>Hash</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+
+      <p class="small-note">
+        Nota: SHA-1 è incluso per compatibilità con sistemi legacy, ma non è raccomandato per usi crittografici moderni. Per verifiche robuste preferisci SHA-256 o SHA-512.
+      </p>
+    </section>
+  </main>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const calculateBtn = document.getElementById('calculateBtn');
+    const copyAllBtn = document.getElementById('copyAllBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const statusEl = document.getElementById('status');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileType = document.getElementById('fileType');
+    const fileModified = document.getElementById('fileModified');
+    const resultsTable = document.getElementById('resultsTable');
+    const resultsBody = document.getElementById('resultsBody');
+
+    let selectedFile = null;
+    let latestResults = [];
+
+    if (!window.crypto || !window.crypto.subtle) {
+      setStatus('Il browser non supporta Web Crypto API. Usa una versione aggiornata di Chrome, Edge, Firefox o Safari.', true);
+      dropzone.style.pointerEvents = 'none';
+      dropzone.style.opacity = '0.55';
+    }
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (event) => {
+      const file = event.target.files[0];
+      if (file) setSelectedFile(file);
+    });
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    dropzone.addEventListener('drop', (event) => {
+      const file = event.dataTransfer.files[0];
+      if (file) setSelectedFile(file);
+    });
+
+    calculateBtn.addEventListener('click', calculateHashes);
+    copyAllBtn.addEventListener('click', copyAllResults);
+    resetBtn.addEventListener('click', resetPage);
+
+    function setSelectedFile(file) {
+      selectedFile = file;
+      latestResults = [];
+      resultsBody.innerHTML = '';
+      resultsTable.style.display = 'none';
+      copyAllBtn.disabled = true;
+
+      fileName.textContent = file.name;
+      fileSize.textContent = formatBytes(file.size);
+      fileType.textContent = file.type || 'Non disponibile';
+      fileModified.textContent = file.lastModified ? new Date(file.lastModified).toLocaleString('it-IT') : 'Non disponibile';
+      fileInfo.style.display = 'block';
+
+      calculateBtn.disabled = false;
+      setStatus('File selezionato. Premi “Calcola hash”.');
+    }
+
+    function getSelectedAlgorithms() {
+      return [...document.querySelectorAll('.options input[type="checkbox"]:checked')]
+        .map(input => input.value);
+    }
+
+    async function calculateHashes() {
+      if (!selectedFile) return;
+
+      const algorithms = getSelectedAlgorithms();
+      if (algorithms.length === 0) {
+        setStatus('Seleziona almeno un algoritmo.', true);
+        return;
+      }
+
+      calculateBtn.disabled = true;
+      copyAllBtn.disabled = true;
+      resultsBody.innerHTML = '';
+      resultsTable.style.display = 'none';
+      latestResults = [];
+
+      try {
+        setStatus('Lettura del file in corso...');
+        const buffer = await selectedFile.arrayBuffer();
+
+        for (const algorithm of algorithms) {
+          setStatus(`Calcolo ${algorithm} in corso...`);
+          const hash = await cryptoHash(buffer, algorithm);
+          latestResults.push({ algorithm, hash });
+          addResultRow(algorithm, hash);
+        }
+
+        resultsTable.style.display = 'table';
+        copyAllBtn.disabled = false;
+        setStatus('Hash calcolati localmente.');
+      } catch (error) {
+        console.error(error);
+        setStatus('Errore durante il calcolo degli hash.', true);
+      } finally {
+        calculateBtn.disabled = false;
+      }
+    }
+
+    async function cryptoHash(buffer, algorithm) {
+      const digest = await crypto.subtle.digest(algorithm, buffer);
+      return bufferToHex(digest);
+    }
+
+    function bufferToHex(buffer) {
+      return [...new Uint8Array(buffer)]
+        .map(byte => byte.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function addResultRow(algorithm, hash) {
+      const tr = document.createElement('tr');
+
+      const algTd = document.createElement('td');
+      algTd.textContent = algorithm;
+
+      const hashTd = document.createElement('td');
+      const code = document.createElement('code');
+      code.textContent = hash;
+
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'copy-btn secondary';
+      copyBtn.textContent = 'Copia';
+      copyBtn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(hash);
+        copyBtn.textContent = 'Copiato';
+        setTimeout(() => copyBtn.textContent = 'Copia', 1200);
+      });
+
+      hashTd.appendChild(code);
+      hashTd.appendChild(copyBtn);
+
+      tr.appendChild(algTd);
+      tr.appendChild(hashTd);
+      resultsBody.appendChild(tr);
+    }
+
+    async function copyAllResults() {
+      if (!latestResults.length) return;
+
+      const text = latestResults
+        .map(item => `${item.algorithm}: ${item.hash}`)
+        .join('\n');
+
+      await navigator.clipboard.writeText(text);
+      setStatus('Tutti gli hash sono stati copiati negli appunti.');
+    }
+
+    function resetPage() {
+      selectedFile = null;
+      latestResults = [];
+      fileInput.value = '';
+      fileInfo.style.display = 'none';
+      resultsBody.innerHTML = '';
+      resultsTable.style.display = 'none';
+      calculateBtn.disabled = true;
+      copyAllBtn.disabled = true;
+      setStatus('Nessun file selezionato.');
+    }
+
+    function setStatus(message, isError = false) {
+      statusEl.textContent = message;
+      statusEl.classList.toggle('error', isError);
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 byte';
+      const units = ['byte', 'KB', 'MB', 'GB', 'TB'];
+      const index = Math.floor(Math.log(bytes) / Math.log(1024));
+      const value = bytes / Math.pow(1024, index);
+      return `${value.toFixed(index === 0 ? 0 : 2)} ${units[index]}`;
+    }
+  </script>
+</body>
+</html>
